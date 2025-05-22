@@ -1,0 +1,77 @@
+body {
+    padding: 20px;
+    background-color: #f8f9fa; /* Example background */
+    font-family: 'Poppins', Arial, sans-serif; /* Example font */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Arial', sans-serif;
+}
+
+.btn-custom {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary {
+  background: #4fd1c5;
+  border: none;
+  color: #2d3748;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.table-custom {
+    border: 1px solid #dee2e6;
+}
+
+.table-custom th, .table-custom td {
+    padding: 15px;
+    text-align: left;
+}
+
+.card-custom {
+    border: 1px solid #007bff;
+    border-radius: 5px;
+}
+
+.card {
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.navbar-custom {
+    background-color: #343a40;
+}
+
+.navbar-custom .nav-link {
+    color: white;
+}
+
+.sidebar {
+  background: #25877b;
+  min-height: 100vh;
+  width: 250px;
+}
+
+.sidebar .nav-link {
+  color: #fff;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar .nav-link.active,
+.sidebar .nav-link:hover {
+  background: #fff;
+  color: #25877b;
+}
+
+.footer-custom {
+    background-color: #f8f9fa;
+    padding: 10px;
+    text-align: center;
+}
