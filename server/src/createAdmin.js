@@ -1,11 +1,12 @@
 // This script creates an admin user in the database.
 //run "node createAdmin.js" in server/src
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const bcrypt = require('bcrypt');
 const pool = require('./db');
 
 async function createAdmin() {
   const username = 'admin';
-  const password = 'admin123';
+  const password = 'admin124';
   const hash = await bcrypt.hash(password, 10);
 
   // Adjust these fields to match your users table structure
@@ -43,5 +44,9 @@ async function createAdmin() {
     pool.end();
   }
 }
+
+console.log('DB_USER:', process.env.DB_USER);
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD);
+console.log('DB_NAME:', process.env.DB_NAME);
 
 createAdmin();

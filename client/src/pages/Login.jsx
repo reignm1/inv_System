@@ -6,35 +6,28 @@ import { useHistory } from 'react-router-dom';
 
 const Login = () => {
   const history = useHistory();
-  const { login } = useAuth();
+  const { login } = useAuth(); // Use only login from context
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [showForgot, setShowForgot] = useState(false);
 
   const handleChange = e => {
-    const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setForm(f => ({
+      ...f,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: form.username, password: form.password })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        localStorage.setItem('token', data.token); // or sessionStorage
-        history.push('/');
-      } else {
-        setError('Invalid username or password.');
-      }
+      await login(form.username, form.password); // Use context login
+      history.push('/'); // Redirect to home (dashboard)
     } catch (err) {
-      setError('Network error.');
+      setError(err.message || 'Invalid username or password.');
     }
   };
 
@@ -86,7 +79,7 @@ const Login = () => {
               <input
                 type="checkbox"
                 name="remember"
-                checked={form.remember}
+                checked={form.remember || false}
                 onChange={handleChange}
                 style={{ marginLeft: 4 }}
               />

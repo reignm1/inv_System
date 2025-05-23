@@ -11,15 +11,15 @@ const CategoryList = () => {
   useEffect(() => { fetchCategories(); }, []);
 
   const fetchCategories = async () => {
-    const res = await axios.get('http://localhost:5000/api/categories');
+    const res = await axios.get('http://localhost:5000/api/category');
     setCategories(res.data);
   };
 
   const handleSave = async (category) => {
     if (editCategory) {
-      await axios.put(`http://localhost:5000/api/categories/${editCategory.category_ID}`, category);
+      await axios.put(`http://localhost:5000/api/category/${editCategory.category_ID}`, category);
     } else {
-      await axios.post('http://localhost:5000/api/categories', category);
+      await axios.post('http://localhost:5000/api/category', category);
     }
     fetchCategories();
     setShowModal(false);
@@ -32,7 +32,7 @@ const CategoryList = () => {
   };
 
   const handleDelete = async (id) => {
-    await axios.delete(`http://localhost:5000/api/categories/${id}`);
+    await axios.delete(`http://localhost:5000/api/category/${id}`);
     fetchCategories();
   };
 

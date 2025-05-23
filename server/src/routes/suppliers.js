@@ -5,7 +5,7 @@ const router = express.Router();
 // Get all suppliers
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM suppliers');
+    const [rows] = await pool.query('SELECT * FROM supplier');
     res.json(rows);
   } catch (err) {
     res.status(500).json({ message: 'Database error', error: err.message });
@@ -16,10 +16,8 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const [rows] = await pool.query('SELECT * FROM suppliers WHERE supplier_ID = ?', [id]);
-    if (rows.length === 0) {
-      return res.status(404).json({ message: 'Supplier not found' });
-    }
+    const [rows] = await pool.query('SELECT * FROM supplier WHERE supplier_ID = ?', [id]);
+    if (rows.length === 0) return res.status(404).json({ message: 'Supplier not found' });
     res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ message: 'Database error', error: err.message });
@@ -31,7 +29,7 @@ router.post('/', async (req, res) => {
   const { supplier_Company, contact_Person, supplier_ContactNumber, supplier_Email, supplier_Address } = req.body;
   try {
     const [result] = await pool.query(
-      'INSERT INTO suppliers (supplier_Company, contact_Person, supplier_ContactNumber, supplier_Email, supplier_Address) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO supplier (supplier_Company, contact_Person, supplier_ContactNumber, supplier_Email, supplier_Address) VALUES (?, ?, ?, ?, ?)',
       [supplier_Company, contact_Person, supplier_ContactNumber, supplier_Email, supplier_Address]
     );
     res.json({ supplier_ID: result.insertId, supplier_Company, contact_Person, supplier_ContactNumber, supplier_Email, supplier_Address });
@@ -46,7 +44,7 @@ router.put('/:id', async (req, res) => {
   const { supplier_Company, contact_Person, supplier_ContactNumber, supplier_Email, supplier_Address } = req.body;
   try {
     await pool.query(
-      'UPDATE suppliers SET supplier_Company = ?, contact_Person = ?, supplier_ContactNumber = ?, supplier_Email = ?, supplier_Address = ? WHERE supplier_ID = ?',
+      'UPDATE supplier SET supplier_Company = ?, contact_Person = ?, supplier_ContactNumber = ?, supplier_Email = ?, supplier_Address = ? WHERE supplier_ID = ?',
       [supplier_Company, contact_Person, supplier_ContactNumber, supplier_Email, supplier_Address, id]
     );
     res.json({ supplier_ID: id, supplier_Company, contact_Person, supplier_ContactNumber, supplier_Email, supplier_Address });
@@ -59,7 +57,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    await pool.query('DELETE FROM suppliers WHERE supplier_ID = ?', [id]);
+    await pool.query('DELETE FROM supplier WHERE supplier_ID = ?', [id]);
     res.json({ message: 'Supplier deleted' });
   } catch (err) {
     res.status(500).json({ message: 'Database error', error: err.message });

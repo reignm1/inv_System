@@ -29,31 +29,19 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Login function
-  const login = async (username, password, remember) => {
-    try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        // Store token in localStorage or sessionStorage based on "Remember Me"
-        if (remember) {
-          localStorage.setItem('token', data.token);
-          sessionStorage.removeItem('token');
-        } else {
-          sessionStorage.setItem('token', data.token);
-          localStorage.removeItem('token');
-        }
-        const decoded = jwtDecode(data.token);
-        setUser(decoded);
-        return true;
-      }
-      return false;
-    } catch {
-      return false;
+  const login = async (username, password) => {
+    const res = await fetch('http://localhost:5000/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.message || 'Login failed');
     }
+    const data = await res.json();
+    localStorage.setItem('token', data.token);
+    setUser(data.user); // Make sure setUser updates your context state
   };
 
   const logout = () => {

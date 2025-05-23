@@ -1,5 +1,6 @@
 const express = require('express');
 const pool = require('../db');
+const bcrypt = require('bcrypt');
 const router = express.Router();
 
 // Get all users
@@ -12,15 +13,16 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Add a user (make sure to hash password in real apps)
+// Add a user (hash password)
 router.post('/', async (req, res) => {
-  const { user_FirstName, user_LastName, user_MiddleName, user_Address, user_Contact, user_Username, user_Password, user_Role} = req.body;
+  const { user_FirstName, user_LastName, user_MiddleName, user_Address, user_Contact, user_Username, user_Password, user_Role } = req.body;
   try {
+    const hashedPassword = await bcrypt.hash(user_Password, 10);
     const [result] = await pool.query(
-      'INSERT INTO users (user_FirstName, user_LastName, user_MiddleName, user_Address, user_Contact, user_Username, user_PasswordHash, user_Role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [user_FirstName, user_LastName, user_MiddleName, user_Address, user_Contact, user_Username, user_Password, user_Role]
+      'INSERT INTO users (user_FirstName, user_LastName, user_MiddleName, user_Address, user_Contact, user_Username, user_Password, user_Role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [user_FirstName, user_LastName, user_MiddleName, user_Address, user_Contact, user_Username, hashedPassword, user_Role]
     );
-    res.json({ user_ID: result.insertId, user_FirstName, user_LastName, user_MiddleName, user_Address, user_Contact, user_Username, user_Role});
+    res.json({ user_ID: result.insertId, user_FirstName, user_LastName, user_MiddleName, user_Address, user_Contact, user_Username, user_Role });
   } catch (err) {
     res.status(500).json({ message: 'Database error', error: err.message });
   }
@@ -32,7 +34,7 @@ router.put('/:id', async (req, res) => {
   const { user_FirstName, user_LastName, user_MiddleName, user_Address, user_Contact, user_Username, user_Role } = req.body;
   try {
     await pool.query(
-      'UPDATE users SET user_FirstName = ?, user_LastName = ?, user_MiddleName = ?, user_Address = ?, user_Contact = ?, user_Username = ?, user_Role = ?, user_Email = ? WHERE user_ID = ?',
+      'UPDATE users SET user_FirstName = ?, user_LastName = ?, user_MiddleName = ?, user_Address = ?, user_Contact = ?, user_Username = ?, user_Role = ? WHERE user_ID = ?',
       [user_FirstName, user_LastName, user_MiddleName, user_Address, user_Contact, user_Username, user_Role, id]
     );
     res.json({ user_ID: id, user_FirstName, user_LastName, user_MiddleName, user_Address, user_Contact, user_Username, user_Role });

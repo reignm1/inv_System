@@ -1,37 +1,33 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const categoriesRoutes = require('./routes/categories');
-const suppliersRoutes = require('./routes/suppliers');
-const productsRoutes = require('./routes/products');
-const stockRoutes = require('./routes/stock');
-const purchaseOrdersRoutes = require('./routes/purchaseOrders');
-const usersRoutes = require('./routes/users');
-const authRoutes = require('./routes/auth');
-const loginRoutes = require('./routes/login');
 require('dotenv').config();
-
+const express = require('express');
+const cors = require('cors');
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
-}));
-app.use(bodyParser.json());
+const categoryRoutes = require('./routes/category');
+const supplierRoutes = require('./routes/suppliers');
+const productRoutes = require('./routes/products');
+const stockRoutes = require('./routes/stock');
+const purchaseOrderRoutes = require('./routes/purchaseOrders');
+const userRoutes = require('./routes/users');
+const authRoutes = require('./routes/auth');
 
-// Routes
-app.use('/api/categories', categoriesRoutes);
-app.use('/api/suppliers', suppliersRoutes);
-app.use('/api/products', productsRoutes);
+app.use(cors());
+app.use(express.json());
+
+app.use('/api/category', categoryRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/products', productRoutes);
 app.use('/api/stock', stockRoutes);
-app.use('/api/purchase-orders', purchaseOrdersRoutes);
-app.use('/api/users', usersRoutes);
+app.use('/api/purchase_orders', purchaseOrderRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api', authRoutes);
-app.use('/api', loginRoutes);
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Database Connected - Server is running on port ${PORT}`);
-});
+const pool = require('./db');
+pool.getConnection()
+  .then(() => {
+    console.log('Database Connected - Server is running on port 5000');
+    app.listen(5000);
+  })
+  .catch(err => {
+    console.error('Database connection failed:', err);
+  });

@@ -16,7 +16,7 @@ const SupplierList = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get('http://localhost:5000/api/suppliers');
+      const res = await axios.get('http://localhost:5000/api/supplier');
       setSuppliers(res.data);
     } catch (err) {
       setError('Failed to fetch suppliers.');
@@ -29,9 +29,9 @@ const SupplierList = () => {
     setError('');
     try {
       if (editSupplier) {
-        await axios.put(`http://localhost:5000/api/suppliers/${editSupplier.supplier_ID}`, supplier);
+        await axios.put(`http://localhost:5000/api/supplier/${editSupplier.supplier_ID}`, supplier);
       } else {
-        await axios.post('http://localhost:5000/api/suppliers', supplier);
+        await axios.post('http://localhost:5000/api/supplier', supplier);
       }
       fetchSuppliers();
       setShowModal(false);
@@ -52,7 +52,7 @@ const SupplierList = () => {
       setLoading(true);
       setError('');
       try {
-        await axios.delete(`http://localhost:5000/api/suppliers/${id}`);
+        await axios.delete(`http://localhost:5000/api/supplier/${id}`);
         fetchSuppliers();
       } catch (err) {
         setError('Failed to delete supplier.');
