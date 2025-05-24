@@ -21,6 +21,8 @@ app.use('/api/stock', stockRoutes);
 app.use('/api/purchaseorder', purchaseOrdersRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', authRoutes);
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+
 
 const pool = require('./db');
 pool.getConnection()

@@ -3,9 +3,11 @@ import { useAuth } from '../context/AuthContext';
 import { Redirect } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
-  const { user, checkToken } = useAuth();
+  const { user } = useAuth();
 
-  if (!user || !checkToken()) {
+  // Don't call checkToken() here - just check if user exists
+  // The AuthProvider already handles token validation in its useEffect
+  if (!user) {
     return <Redirect to="/login" />;
   }
 

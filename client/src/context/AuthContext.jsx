@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const decoded = jwtDecode(token);
         if (Date.now() < decoded.exp * 1000) {
+          // Always use the decoded JWT data for consistency
           setUser(decoded);
         } else {
           localStorage.removeItem('token');
@@ -41,7 +42,16 @@ export const AuthProvider = ({ children }) => {
     }
     const data = await res.json();
     localStorage.setItem('token', data.token);
-    setUser(data.user); // Make sure setUser updates your context state
+    
+    // Decode the token to get user info consistently
+    try {
+      const decoded = jwtDecode(data.token);
+      setUser(decoded); // Use decoded token data instead of data.user
+    } catch (error) {
+      console.error('Failed to decode token:', error);
+      // Fallback to using data.user if token decode fails
+      setUser(data.user);
+    }
   };
 
   const logout = () => {
@@ -53,22 +63,19 @@ export const AuthProvider = ({ children }) => {
   const checkToken = () => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) {
-      setUser(null);
       return false;
     }
     try {
-      const { exp } = jwtDecode(token);
-      if (Date.now() >= exp * 1000) {
+      const decoded = jwtDecode(token);
+      if (Date.now() >= decoded.exp * 1000) {
         localStorage.removeItem('token');
         sessionStorage.removeItem('token');
-        setUser(null);
         return false;
       }
       return true;
     } catch {
       localStorage.removeItem('token');
       sessionStorage.removeItem('token');
-      setUser(null);
       return false;
     }
   };

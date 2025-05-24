@@ -108,20 +108,21 @@ const Products = () => {
   };
 
   // Delete
-  const handleDelete = async (id) => {
-    if (!id) return;
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
-    setLoading(true);
-    try {
-      await axios.delete(`http://localhost:5000/api/products/${id}`);
-      await fetchProducts();
-      setShowAdd(false);
-      setEditIndex(null);
-    } catch {
-      setError('Failed to delete product.');
-    }
-    setLoading(false);
-  };
+const handleDelete = async (id) => {
+  if (!id) return;
+  if (!window.confirm('Are you sure you want to delete this product?')) return;
+  setLoading(true);
+  try {
+    await axios.delete(`http://localhost:5000/api/products/${id}`, getAuthHeaders());
+    await fetchProducts();
+    setShowAdd(false);
+    setEditIndex(null);
+  } catch {
+    setError('Failed to delete product.');
+  }
+  setLoading(false);
+};
+
 
   // Edit
   const handleEdit = (prod, idx) => {
@@ -303,7 +304,11 @@ const Products = () => {
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
-  return token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+  console.log('Token from localStorage:', token);  // Debug log
+  console.log('Token exists:', !!token);           // Debug log
+  const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+  console.log('Auth headers being sent:', headers); // Debug log
+  return headers;
 };
 
 export default Products;
