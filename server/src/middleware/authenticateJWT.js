@@ -7,7 +7,10 @@ function authenticateJWT(req, res, next) {
     const token = authHeader.split(' ')[1];
     jwt.verify(token, SECRET, (err, user) => {
       if (err) return res.status(401).json({ message: 'Invalid token' });
-      req.user = user; // user object should include user_Role
+      req.user = {
+    ...user,
+    role: user.user_Role || user.role // fallback
+  };
       next();
     });
   } else {

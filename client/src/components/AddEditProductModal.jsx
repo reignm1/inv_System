@@ -29,26 +29,11 @@ const AddEditProductModal = ({ show, handleClose, handleSave, initial, categorie
   const onChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
   const onSave = async () => {
-    if (!form.product_Name.trim()) {
-      setError('Product name is required.');
-      return;
-    }
-    if (!form.category_ID) {
-      setError('Category is required.');
-      return;
-    }
-    if (!form.supplier_ID) {
-      setError('Supplier is required.');
-      return;
-    }
-    if (form.price && Number(form.price) < 0) {
-      setError('Price must be a positive number.');
-      return;
-    }
-    if (form.product_Quantity && Number(form.product_Quantity) < 0) {
-      setError('Quantity must be a positive number.');
-      return;
-    }
+    if (!form.product_Name.trim()) { setError('Product name is required.'); return; }
+    if (!form.category_ID) { setError('Category is required.'); return; }
+    if (!form.supplier_ID) { setError('Supplier is required.'); return; }
+    if (form.price && Number(form.price) < 0) { setError('Price must be a positive number.'); return; }
+    if (form.product_Quantity && Number(form.product_Quantity) < 0) { setError('Quantity must be a positive number.'); return; }
     setError('');
     setLoading(true);
     try {

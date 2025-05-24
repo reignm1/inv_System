@@ -35,7 +35,7 @@ const PurchaseOrders = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get('http://localhost:5000/api/purchaseorders');
+      const res = await axios.get('http://localhost:5000/api/purchaseorder');
       setOrders(res.data); // Even if res.data is [], that's not an error!
     } catch (err) {
       setError('Failed to fetch orders.');
@@ -66,9 +66,9 @@ const PurchaseOrders = () => {
     setError('');
     try {
       if (editOrder) {
-        await axios.put(`http://localhost:5000/api/purchaseorders/${editOrder.purchase_OrderID}`, order);
+        await axios.put(`http://localhost:5000/api/purchaseorder/${editOrder.purchase_OrderID}`, order);
       } else {
-        await axios.post('http://localhost:5000/api/purchaseorders', order);
+        await axios.post('http://localhost:5000/api/purchaseorder', order);
       }
       fetchOrders();
       setShowModal(false);
@@ -92,7 +92,7 @@ const PurchaseOrders = () => {
       setLoading(true);
       setError('');
       try {
-        await axios.delete(`http://localhost:5000/api/purchaseorders/${id}`);
+        await axios.delete(`http://localhost:5000/api/purchaseorder/${id}`);
         fetchOrders();
         setEditOrder(null);
         setEditIndex(null);

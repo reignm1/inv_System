@@ -5,7 +5,7 @@ const router = express.Router();
 // Get all purchase orders
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM purchaseprder');
+    const [rows] = await pool.query('SELECT * FROM purchaseorder');
     res.json(rows);
   } catch (err) {
     res.status(500).json({ message: 'Database error', error: err.message });

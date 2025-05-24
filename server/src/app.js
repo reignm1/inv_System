@@ -5,9 +5,9 @@ const app = express();
 
 const categoryRoutes = require('./routes/category');
 const supplierRoutes = require('./routes/suppliers');
-const productRoutes = require('./routes/products');
+const productsRoutes = require('./routes/products');
 const stockRoutes = require('./routes/stock');
-const purchaseOrderRoutes = require('./routes/purchaseOrders');
+const purchaseOrdersRoutes = require('./routes/purchaseOrders');
 const userRoutes = require('./routes/users');
 const authRoutes = require('./routes/auth');
 
@@ -16,9 +16,9 @@ app.use(express.json());
 
 app.use('/api/category', categoryRoutes);
 app.use('/api/suppliers', supplierRoutes);
-app.use('/api/products', productRoutes);
+app.use('/api/products', productsRoutes);
 app.use('/api/stock', stockRoutes);
-app.use('/api/purchase_orders', purchaseOrderRoutes);
+app.use('/api/purchaseorder', purchaseOrdersRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', authRoutes);
 

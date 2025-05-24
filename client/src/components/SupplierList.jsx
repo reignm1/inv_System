@@ -1,22 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { Table, Button, Spinner, Alert } from 'react-bootstrap';
+import { Table, Button, Form, InputGroup, Spinner, Alert } from 'react-bootstrap';
+import { FaPlus, FaEdit } from 'react-icons/fa';
 import AddEditSupplierModal from './AddEditSupplierModal';
 
 const SupplierList = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editSupplier, setEditSupplier] = useState(null);
+  const [editIndex, setEditIndex] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const editPopupRef = useRef(null);
 
-  useEffect(() => { fetchSuppliers(); }, []);
+  useEffect(() => {
+    fetchSuppliers();
+    // Close edit popup on outside click
+    const handleClickOutside = (event) => {
+      if (editPopupRef.current && !editPopupRef.current.contains(event.target)) {
+        setEditIndex(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchSuppliers = async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get('http://localhost:5000/api/supplier');
+      const res = await axios.get('http://localhost:5000/api/suppliers');
       setSuppliers(res.data);
     } catch (err) {
       setError('Failed to fetch suppliers.');
@@ -29,22 +43,24 @@ const SupplierList = () => {
     setError('');
     try {
       if (editSupplier) {
-        await axios.put(`http://localhost:5000/api/supplier/${editSupplier.supplier_ID}`, supplier);
+        await axios.put(`http://localhost:5000/api/suppliers/${editSupplier.supplier_ID}`, supplier);
       } else {
-        await axios.post('http://localhost:5000/api/supplier', supplier);
+        await axios.post('http://localhost:5000/api/suppliers', supplier);
       }
       fetchSuppliers();
       setShowModal(false);
       setEditSupplier(null);
+      setEditIndex(null);
     } catch (err) {
       setError('Failed to save supplier.');
       setLoading(false);
     }
   };
 
-  const handleEdit = (sup) => {
+  const handleEdit = (sup, idx) => {
     setEditSupplier(sup);
-    setShowModal(true);
+    setEditIndex(idx);
+    setShowModal(false);
   };
 
   const handleDelete = async (id) => {
@@ -52,8 +68,10 @@ const SupplierList = () => {
       setLoading(true);
       setError('');
       try {
-        await axios.delete(`http://localhost:5000/api/supplier/${id}`);
+        await axios.delete(`http://localhost:5000/api/suppliers/${id}`);
         fetchSuppliers();
+        setEditSupplier(null);
+        setEditIndex(null);
       } catch (err) {
         setError('Failed to delete supplier.');
         setLoading(false);
@@ -61,42 +79,114 @@ const SupplierList = () => {
     }
   };
 
+  const handleShowAdd = () => {
+    setEditSupplier(null);
+    setShowModal(true);
+    setEditIndex(null);
+  };
+
+  // Filtered suppliers
+  const filteredSuppliers = suppliers.filter(sup =>
+    sup.supplier_Company.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <div className="card shadow-sm border-0 rounded-4 mb-4">
-      <div className="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-        <h5 className="mb-0 fw-bold">Supplier List</h5>
-        <Button variant="primary" size="sm" onClick={() => { setEditSupplier(null); setShowModal(true); }}>Add Supplier</Button>
+    <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
+      {/* Search Bar */}
+      <div className="d-flex mb-3 gap-3">
+        <InputGroup>
+          <Form.Control
+            placeholder="Suppliers"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ minWidth: 220 }}
+          />
+        </InputGroup>
+        <Button variant="light" style={{ minWidth: 180, fontSize: 22, border: '1px solid #bbb' }}>Contact</Button>
       </div>
-      <div className="card-body">
-        {error && <Alert variant="danger">{error}</Alert>}
+
+      {/* Supplier Table */}
+      <div style={{ background: '#f8f9f9', borderRadius: 12, padding: 0, boxShadow: '0 2px 8px #0001' }}>
+        <div className="d-flex align-items-center justify-content-between px-4 py-2" style={{ borderBottom: '1px solid #eee' }}>
+          <span className="fw-bold" style={{ fontSize: 22 }}>Suppliers</span>
+          <Button variant="light" onClick={handleShowAdd} style={{ borderRadius: '50%', fontSize: 22, width: 38, height: 38 }}>
+            <FaPlus />
+          </Button>
+        </div>
+        {error && <Alert variant="danger" className="m-3">{error}</Alert>}
         {loading ? (
           <div className="text-center my-4"><Spinner animation="border" /></div>
         ) : (
-          <Table hover responsive>
+          <Table hover responsive className="mb-0" style={{ background: 'transparent' }}>
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Contact</th>
+                <th>Company</th>
+                <th>Contact Person</th>
+                <th>Contact Number</th>
                 <th>Email</th>
-                <th>Actions</th>
+                <th>Supplier Address</th>
+                <th style={{ width: 60 }}></th>
               </tr>
             </thead>
             <tbody>
-              {suppliers.length === 0 ? (
+              {filteredSuppliers.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center text-muted">No suppliers found.</td>
+                  <td colSpan="6" className="text-center text-muted">No suppliers found.</td>
                 </tr>
               ) : (
-                suppliers.map(sup => (
+                filteredSuppliers.map((sup, idx) => (
                   <tr key={sup.supplier_ID}>
-                    <td>{sup.supplier_ID}</td>
                     <td>{sup.supplier_Company}</td>
                     <td>{sup.contact_Person}</td>
+                    <td>{sup.supplier_ContactNumber}</td>
                     <td>{sup.supplier_Email}</td>
-                    <td>
-                      <Button variant="outline-secondary" size="sm" className="me-2" onClick={() => handleEdit(sup)}>Edit</Button>
-                      <Button variant="outline-danger" size="sm" onClick={() => handleDelete(sup.supplier_ID)}>Delete</Button>
+                    <td>{sup.supplier_Address}</td>
+                    <td style={{ position: 'relative' }}>
+                      <Button
+                        variant="outline-success"
+                        size="sm"
+                        style={{ borderRadius: '50%' }}
+                        onClick={() => handleEdit(sup, idx)}
+                      >
+                        <FaEdit />
+                      </Button>
+                      {/* Edit/Delete Popup */}
+                      {editIndex === idx && (
+                        <div
+                          ref={editPopupRef}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            right: 40,
+                            background: '#fff',
+                            border: '1px solid #ccc',
+                            borderRadius: 8,
+                            boxShadow: '0 2px 8px #0002',
+                            zIndex: 10,
+                            padding: 12,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 8
+                          }}
+                        >
+                          <Button
+                            variant="success"
+                            size="sm"
+                            onClick={() => { setShowModal(true); setEditIndex(null); }}
+                            style={{ minWidth: 70 }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleDelete(sup.supplier_ID)}
+                            style={{ minWidth: 70 }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -105,12 +195,15 @@ const SupplierList = () => {
           </Table>
         )}
       </div>
-      <AddEditSupplierModal
-        show={showModal}
-        handleClose={() => { setShowModal(false); setEditSupplier(null); }}
-        handleSave={handleSave}
-        initial={editSupplier}
-      />
+      {/* Add/Edit Supplier Modal */}
+      {showModal && (
+        <AddEditSupplierModal
+          show={showModal}
+          handleClose={() => { setShowModal(false); setEditSupplier(null); }}
+          handleSave={handleSave}
+          initial={editSupplier}
+        />
+      )}
     </div>
   );
 };

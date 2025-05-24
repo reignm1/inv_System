@@ -10,6 +10,9 @@ import Products from './components/Products';
 import Sidebar from './components/Sidebar';
 import ProtectedRoute from './components/ProtectedRoute';
 import PurchaseOrders from './components/PurchaseOrders';
+import SupplierList from './components/SupplierList';
+import StockManagement from './components/StockManagement';
+import UserManagement from './components/UserManagement';
 
 function App() {
   return (
@@ -25,6 +28,9 @@ function App() {
                   <Route exact path="/" component={Dashboard} />
                   <Route path="/products" component={Products} />
                   <Route path="/orders" component={PurchaseOrders} />
+                  <Route path="/suppliers" component={SupplierList} />
+                  <Route path="/stock" component={StockManagement} />
+                  <Route path="/users" component={UserManagement} />
                   {/* Add other routes here as needed */}
                 </Switch>
               </div>

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Table, Button, Form, InputGroup, Spinner, Alert } from 'react-bootstrap';
 import { FaPlus, FaEdit } from 'react-icons/fa';
 import AddEditProductModal from './AddEditProductModal';
+import AddEditCategoryModal from './AddEditCategoryModal';
 
 const initialFormState = {
   product_Name: '',
@@ -12,17 +13,19 @@ const initialFormState = {
   product_Quantity: ''
 };
 
-const Product = ({ category = [], suppliers = [] }) => {
+const Products = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [suppliersList, setSuppliersList] = useState([]);
   const [searchName, setSearchName] = useState('');
-  const [searchCategory, setSearchCategory] = useState('');
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState(initialFormState);
-  const [editIndex, setEditIndex] = useState(null); // index of row being edited
+  const [editIndex, setEditIndex] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState(initialFormState);
+
+  // Category modal state
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
 
   // For closing edit popup when clicking outside
   const editPopupRef = useRef(null);
@@ -41,11 +44,17 @@ const Product = ({ category = [], suppliers = [] }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (search = '') => {
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:5000/api/products');
-      setProducts(res.data);
+      const res = await axios.get('http://localhost:5000/api/products', getAuthHeaders());
+      let data = res.data;
+      if (search) {
+        data = data.filter(prod =>
+          prod.product_Name.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+      setProducts(data);
     } catch {
       setError('Failed to fetch products.');
     }
@@ -62,51 +71,50 @@ const Product = ({ category = [], suppliers = [] }) => {
     setSuppliersList(res.data);
   };
 
-  // Filtered products
-  const filteredProducts = products.filter(prod =>
-    prod.product_Name.toLowerCase().includes(searchName.toLowerCase()) &&
-    (searchCategory === '' || prod.category_Name === searchCategory)
-  );
-
   // --- CRUD Handlers ---
 
   // Add or Edit
-  const handleSave = async () => {
+  const handleSave = async (product) => {
     setError('');
-    if (!form.product_Name.trim()) return setError('Item Name is required.');
-    if (!form.category_ID) return setError('Category is required.');
-    if (!form.supplier_ID) return setError('Supplier is required.');
-    if (form.price && Number(form.price) < 0) return setError('Price must be positive.');
-    if (form.product_Quantity && Number(form.product_Quantity) < 0) return setError('Quantity must be positive.');
-
     setLoading(true);
     try {
-      if (form.product_ID) {
-        // Edit
-        await axios.put(`http://localhost:5000/api/products/${form.product_ID}`, form);
+      const payload = {
+        ...product,
+        category_ID: Number(product.category_ID),
+        supplier_ID: Number(product.supplier_ID),
+        price: Number(product.price),
+        product_Quantity: Number(product.product_Quantity)
+      };
+      if (product.product_ID) {
+        await axios.put(
+          `http://localhost:5000/api/products/${product.product_ID}`,
+          payload,
+          getAuthHeaders()
+        );
       } else {
-        // Add
-        await axios.post('http://localhost:5000/api/products', form);
+        await axios.post(
+          'http://localhost:5000/api/products',
+          payload,
+          getAuthHeaders()
+        );
       }
-      fetchProducts();
-      handleClear();
+      await fetchProducts();
       setShowAdd(false);
       setEditIndex(null);
-    } catch {
-      setError('Failed to save product.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to save product.');
     }
     setLoading(false);
   };
 
   // Delete
-  const handleDelete = async (id = form.product_ID) => {
+  const handleDelete = async (id) => {
     if (!id) return;
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     setLoading(true);
     try {
       await axios.delete(`http://localhost:5000/api/products/${id}`);
-      fetchProducts();
-      handleClear();
+      await fetchProducts();
       setShowAdd(false);
       setEditIndex(null);
     } catch {
@@ -126,13 +134,13 @@ const Product = ({ category = [], suppliers = [] }) => {
       product_Quantity: prod.product_Quantity
     });
     setShowAdd(true);
-    setEditIndex(null);
+    setEditIndex(idx);
     setError('');
   };
 
   // Show Add
   const handleShowAdd = () => {
-    setForm(initialFormState);
+    setForm(initialFormState); // Not really needed for add
     setShowAdd(true);
     setEditIndex(null);
     setError('');
@@ -148,7 +156,7 @@ const Product = ({ category = [], suppliers = [] }) => {
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
-      {/* Search Bar */}
+      {/* Search Bar and Add Category */}
       <div className="d-flex mb-3 gap-3">
         <InputGroup>
           <Form.Control
@@ -157,19 +165,21 @@ const Product = ({ category = [], suppliers = [] }) => {
             onChange={e => setSearchName(e.target.value)}
             style={{ minWidth: 220 }}
           />
-        </InputGroup>
-        <InputGroup>
-          <Form.Select
-            value={searchCategory}
-            onChange={e => setSearchCategory(e.target.value)}
-            style={{ minWidth: 180 }}
+          <Button
+            variant="outline-secondary"
+            onClick={() => fetchProducts(searchName)}
+            style={{ minWidth: 90 }}
           >
-            <option value="">Category</option>
-            {categories.map(cat => (
-              <option key={cat.category_ID} value={cat.category_Name}>{cat.category_Name}</option>
-            ))}
-          </Form.Select>
+            Search
+          </Button>
         </InputGroup>
+        <Button
+          variant="outline-secondary"
+          style={{ minWidth: 180 }}
+          onClick={() => setShowCategoryModal(true)}
+        >
+          Add Category
+        </Button>
       </div>
 
       {/* Inventory Table */}
@@ -180,6 +190,7 @@ const Product = ({ category = [], suppliers = [] }) => {
             <FaPlus />
           </Button>
         </div>
+        {error && <Alert variant="danger" className="m-3">{error}</Alert>}
         <Table hover responsive className="mb-0" style={{ background: 'transparent' }}>
           <thead>
             <tr>
@@ -192,12 +203,16 @@ const Product = ({ category = [], suppliers = [] }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan="6" className="text-center"><Spinner animation="border" /></td>
+              </tr>
+            ) : products.length === 0 ? (
               <tr>
                 <td colSpan="6" className="text-center text-muted">No products found.</td>
               </tr>
             ) : (
-              filteredProducts.map((prod, idx) => (
+              products.map((prod, idx) => (
                 <tr key={prod.product_ID}>
                   <td>{prod.product_Name}</td>
                   <td>{prod.category_Name}</td>
@@ -263,30 +278,32 @@ const Product = ({ category = [], suppliers = [] }) => {
         <AddEditProductModal
           show={showAdd}
           handleClose={() => { setShowAdd(false); handleClear(); }}
-          handleSave={async (product) => {
-            setError('');
-            setLoading(true);
-            try {
-              if (product.product_ID) {
-                await axios.put(`http://localhost:5000/api/products/${product.product_ID}`, product);
-              } else {
-                await axios.post('http://localhost:5000/api/products', product);
-              }
-              fetchProducts();
-              setShowAdd(false);
-              setEditIndex(null);
-            } catch {
-              setError('Failed to save product.');
-            }
-            setLoading(false);
-          }}
-          initial={form.product_ID ? form : null}
+          handleSave={handleSave}
+          initial={editIndex !== null ? form : null}
           categories={categories}
           suppliers={suppliersList}
+        />
+      )}
+
+      {/* Add/Edit Category Modal */}
+      {showCategoryModal && (
+        <AddEditCategoryModal
+          show={showCategoryModal}
+          handleClose={() => setShowCategoryModal(false)}
+          handleSave={async (cat) => {
+            await axios.post('http://localhost:5000/api/category', cat);
+            await fetchCategories();
+            setShowCategoryModal(false);
+          }}
         />
       )}
     </div>
   );
 };
 
-export default Product;
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+};
+
+export default Products;

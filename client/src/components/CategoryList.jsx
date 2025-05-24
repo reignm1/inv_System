@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Table, Button } from 'react-bootstrap';
-import AddEditCategoryModal from './AddEditCategoryModal';
 
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
