@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { Table, Button, Form, InputGroup, Spinner, Alert } from 'react-bootstrap';
-import { FaPlus, FaEdit } from 'react-icons/fa';
+import { Table, Button, Form, InputGroup, Alert } from 'react-bootstrap';
+import { FaPlus, FaEdit, FaSearch } from 'react-icons/fa';
 import AddEditSupplierModal from './AddEditSupplierModal';
 
 const SupplierList = () => {
@@ -91,33 +91,33 @@ const SupplierList = () => {
   );
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
+    <div className="container my-4">
       {/* Search Bar */}
-      <div className="d-flex mb-3 gap-3">
+      <div className="d-flex flex-wrap gap-2 mb-3">
         <InputGroup>
           <Form.Control
-            placeholder="Suppliers"
+            placeholder="Company Name"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ minWidth: 220 }}
+            style={{ maxWidth: 300 }}
           />
+          <FaSearch style ={{position: 'absolute', left: 270, top: 10}}></FaSearch>
         </InputGroup>
-        <Button variant="light" style={{ minWidth: 180, fontSize: 22, border: '1px solid #bbb' }}>Contact</Button>
       </div>
 
       {/* Supplier Table */}
-      <div style={{ background: '#f8f9f9', borderRadius: 12, padding: 0, boxShadow: '0 2px 8px #0001' }}>
+      <div className="card shadow-sm">
         <div className="d-flex align-items-center justify-content-between px-4 py-2" style={{ borderBottom: '1px solid #eee' }}>
-          <span className="fw-bold" style={{ fontSize: 22 }}>Suppliers</span>
-          <Button variant="light" onClick={handleShowAdd} style={{ borderRadius: '50%', fontSize: 22, width: 38, height: 38 }}>
-            <FaPlus />
+          <span className="fw-bold" style={{ fontSize: 21,}}>Suppliers</span>
+          <Button variant="success" style= {{maxHeight: 30, position: 'absolute', right: 15}} onClick={handleShowAdd} >
+            <FaPlus style={{ marginBottom: 9 }} />
           </Button>
         </div>
         {error && <Alert variant="danger" className="m-3">{error}</Alert>}
         {loading ? (
-          <div className="text-center my-4"><Spinner animation="border" /></div>
+          <div className="text-center my-4"></div>
         ) : (
-          <Table hover responsive className="mb-0" style={{ background: 'transparent' }}>
+          <Table hover className="mb-0 table-striped" style={{ background: 'transparent' }}>
             <thead>
               <tr>
                 <th>Company</th>
@@ -125,7 +125,7 @@ const SupplierList = () => {
                 <th>Contact Number</th>
                 <th>Email</th>
                 <th>Supplier Address</th>
-                <th style={{ width: 60 }}></th>
+                <th style={{ width: 80}}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -148,7 +148,7 @@ const SupplierList = () => {
                         style={{ borderRadius: '50%' }}
                         onClick={() => handleEdit(sup, idx)}
                       >
-                        <FaEdit />
+                        <FaEdit/>
                       </Button>
                       {/* Edit/Delete Popup */}
                       {editIndex === idx && (

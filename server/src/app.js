@@ -10,6 +10,8 @@ const stockRoutes = require('./routes/stock');
 const purchaseOrdersRoutes = require('./routes/purchaseOrders');
 const userRoutes = require('./routes/users');
 const authRoutes = require('./routes/auth');
+const dashboardRoutes = require('./routes/dashboard'); // Add this line
+
 
 app.use(cors());
 app.use(express.json());
@@ -22,6 +24,7 @@ app.use('/api/purchaseorder', purchaseOrdersRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', authRoutes);
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+app.use('/api/dashboard', dashboardRoutes); // Add this line
 
 
 const pool = require('./db');

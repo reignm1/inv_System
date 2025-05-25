@@ -1,6 +1,6 @@
 .login-container {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
 }
 
 .login-left {
@@ -13,8 +13,11 @@
 }
 
 .login-logo {
-  width: 120px;
-  margin-bottom: 16px;
+  width: 160px;
+  height: 160px;
+  background-image: url('./mlogo1.jpg');
+  background-size: cover;
+  background-position: center;
 }
 
 .login-title {
@@ -114,10 +117,7 @@
 
 .login-right {
   flex: 1;
-  background: url('./login-bg.jpg') center center/cover no-repeat;
-  min-height: 100vh;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  border-radius: 0 0 0 0;
+  background: url('./market3.jpg') no-repeat center center;
+  background-size: cover;
+  background-position: center;
 }

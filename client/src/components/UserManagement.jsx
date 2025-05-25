@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { Table, Button, Spinner, Alert } from 'react-bootstrap';
+import { Table, Button, Alert } from 'react-bootstrap';
 import { FaPlus, FaEdit } from 'react-icons/fa';
 import AddEditUserModal from './AddEditUserModal';
 
@@ -101,7 +101,7 @@ const UserManagement = () => {
       <div style={{ background: '#f8f9f9', borderRadius: 12, padding: 0, boxShadow: '0 2px 8px #0001' }}>
         {error && <Alert variant="danger" className="m-3">{error}</Alert>}
         {loading ? (
-          <div className="text-center my-4"><Spinner animation="border" /></div>
+          <div className="text-center my-4"></div>
         ) : (
           <Table hover responsive className="mb-0" style={{ background: 'transparent' }}>
             <thead>
@@ -110,9 +110,9 @@ const UserManagement = () => {
                 <th>Last Name</th>
                 <th>Username</th>
                 <th>Contact</th>
-                <th>Email</th>
+                <th>Email Address</th>
                 <th>Role</th>
-                <th style={{ width: 60 }}></th>
+                <th style={{ width: 80 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -127,7 +127,7 @@ const UserManagement = () => {
                     <td>{user.user_LastName}</td>
                     <td>{user.user_Username}</td>
                     <td>{user.user_Contact}</td>
-                    <td>{user.user_Email}</td>
+                    <td>{user.user_Address}</td>
                     <td>{user.user_Role}</td>
                     <td style={{ position: 'relative' }}>
                       <Button

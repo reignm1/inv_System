@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { Table, Button, Form, InputGroup, Spinner, Alert } from 'react-bootstrap';
-import { FaPlus, FaEdit } from 'react-icons/fa';
+import { Table, Button, Form, InputGroup, Alert } from 'react-bootstrap';
+import { FaPlus, FaEdit} from 'react-icons/fa';
 import AddEditProductModal from './AddEditProductModal';
 import AddEditCategoryModal from './AddEditCategoryModal';
+
 
 const initialFormState = {
   product_Name: '',
@@ -16,13 +17,16 @@ const initialFormState = {
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [suppliersList, setSuppliersList] = useState([]);
   const [searchName, setSearchName] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(initialFormState);
+  const [editProduct, setEditProduct] = useState(null);
+  const [suppliers, setSuppliersList] = useState([]);
+
+
 
   // Category modal state
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -125,19 +129,12 @@ const handleDelete = async (id) => {
 
 
   // Edit
-  const handleEdit = (prod, idx) => {
-    setForm({
-      product_ID: prod.product_ID,
-      product_Name: prod.product_Name,
-      category_ID: prod.category_ID,
-      supplier_ID: prod.supplier_ID,
-      price: prod.price,
-      product_Quantity: prod.product_Quantity
-    });
-    setShowAdd(true);
-    setEditIndex(idx);
-    setError('');
-  };
+const handleEdit = (prod) => {
+  setEditProduct(prod);  // ✅ sets product to edit
+  setShowAdd(true);      // ✅ opens modal
+};
+
+
 
   // Show Add
   const handleShowAdd = () => {
@@ -147,158 +144,143 @@ const handleDelete = async (id) => {
     setError('');
   };
 
-  // Clear form
-  const handleClear = () => {
-    setForm(initialFormState);
-    setError('');
-  };
-
   // --- Render ---
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
-      {/* Search Bar and Add Category */}
-      <div className="d-flex mb-3 gap-3">
-        <InputGroup>
-          <Form.Control
-            placeholder="Product Name"
-            value={searchName}
-            onChange={e => setSearchName(e.target.value)}
-            style={{ minWidth: 220 }}
-          />
-          <Button
-            variant="outline-secondary"
-            onClick={() => fetchProducts(searchName)}
-            style={{ minWidth: 90 }}
-          >
-            Search
-          </Button>
-        </InputGroup>
-        <Button
-          variant="outline-secondary"
-          style={{ minWidth: 180 }}
-          onClick={() => setShowCategoryModal(true)}
-        >
-          Add Category
-        </Button>
-      </div>
+<div className="container my-4">
+  {/* Search Bar and Add Category */}
+  <div className="d-flex flex-wrap gap-2 mb-3">
+    <InputGroup className="flex-grow-1" style={{ maxWidth: 400 }}>
+      <Form.Control
+        placeholder="Search by Product Name"
+        value={searchName}
+        onChange={e => setSearchName(e.target.value)}
+      />
+      <Button style={{ backgroundColor: '#198754', color: 'white'}} variant="primary" onClick={() => fetchProducts(searchName)}>
+        Search
+      </Button>
+    </InputGroup>
+    <Button variant="secondary" onClick={() => setShowCategoryModal(true)}>
+      Add Category
+    </Button>
+  </div>
 
-      {/* Inventory Table */}
-      <div style={{ background: '#f8f9f9', borderRadius: 12, padding: 0, boxShadow: '0 2px 8px #0001' }}>
-        <div className="d-flex align-items-center justify-content-between px-4 py-2" style={{ borderBottom: '1px solid #eee' }}>
-          <span className="fw-bold" style={{ fontSize: 22 }}>Inventory</span>
-          <Button variant="light" onClick={handleShowAdd} style={{ borderRadius: '50%', fontSize: 22, width: 38, height: 38 }}>
-            <FaPlus />
-          </Button>
-        </div>
-        {error && <Alert variant="danger" className="m-3">{error}</Alert>}
-        <Table hover responsive className="mb-0" style={{ background: 'transparent' }}>
-          <thead>
+  {/* Inventory Table */}
+  <div className="card shadow-sm">
+    <div className="card-header d-flex justify-content-between align-items-center">
+      <h5 className="fw-bold" style={{ fontSize: 22 }}>Inventory</h5>
+      <Button variant="success" onClick={handleShowAdd} className="d-flex align-items-center gap-1">
+        <FaPlus />
+      </Button>
+    </div>
+    <div className="card-body p-0">
+      {error && <Alert variant="danger" className="m-3">{error}</Alert>}
+      <Table hover className="mb-0 table-striped">
+        <thead className="table-light">
+          <tr>
+            <th>Item Name</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Supplier</th>
+            <th>Quantity</th>
+            <th style={{ width: 80 }}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? (
             <tr>
-              <th>Item Name</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Supplier</th>
-              <th>Product Quantity</th>
-              <th style={{ width: 60 }}></th>
+              <td colSpan="6" className="text-center py-3">
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="6" className="text-center"><Spinner animation="border" /></td>
-              </tr>
-            ) : products.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="text-center text-muted">No products found.</td>
-              </tr>
-            ) : (
-              products.map((prod, idx) => (
-                <tr key={prod.product_ID}>
-                  <td>{prod.product_Name}</td>
-                  <td>{prod.category_Name}</td>
-                  <td>{prod.price}</td>
-                  <td>{prod.supplier_Company}</td>
-                  <td>{prod.product_Quantity}</td>
-                  <td style={{ position: 'relative' }}>
-                    <Button
-                      variant="outline-success"
-                      size="sm"
-                      style={{ borderRadius: '50%' }}
-                      onClick={() => handleEdit(prod, idx)}
+          ) : products.length === 0 ? (
+            <tr>
+              <td colSpan="6" className="text-center text-muted py-3">No products found.</td>
+            </tr>
+          ) : (
+            products.map((prod, idx) => (
+              <tr key={prod.product_ID}>
+                <td>{prod.product_Name}</td>
+                <td>{prod.category_Name}</td>
+                <td>₱ {prod.price}</td>
+                <td>{prod.supplier_Company}</td>
+                <td>{prod.product_Quantity}</td>
+                <td className="position-relative">
+                  <Button
+                    variant="outline-success"
+                    size="sm"
+                    style={{ borderRadius: '50%'}}
+                    onClick={() => setEditIndex(idx)}
+                  >
+                    <FaEdit />
+                  </Button>
+                  {editIndex === idx && (
+                    <div
+                      ref={editPopupRef}
+                      className="position-absolute bg-white border rounded shadow p-2"
+                      style={{ top: 0, right: 40, zIndex: 10, minWidth: 100 }}
                     >
-                      <FaEdit />
-                    </Button>
-                    {/* Edit/Delete Popup */}
-                    {editIndex === idx && (
-                      <div
-                        ref={editPopupRef}
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          right: 40,
-                          background: '#fff',
-                          border: '1px solid #ccc',
-                          borderRadius: 8,
-                          boxShadow: '0 2px 8px #0002',
-                          zIndex: 10,
-                          padding: 12,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 8
+                      <Button
+                        variant="success"
+                        size="sm"
+                        className="w-100 mb-1"
+                        onClick={() => {
+                          handleEdit(prod, idx);
+                          setEditIndex(null);
                         }}
                       >
-                        <Button
-                          variant="success"
-                          size="sm"
-                          onClick={() => setShowAdd(true)}
-                          style={{ minWidth: 70 }}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleDelete(prod.product_ID)}
-                          style={{ minWidth: 70 }}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </Table>
-      </div>
-
-      {/* Add/Edit Product Form */}
-      {showAdd && (
-        <AddEditProductModal
-          show={showAdd}
-          handleClose={() => { setShowAdd(false); handleClear(); }}
-          handleSave={handleSave}
-          initial={editIndex !== null ? form : null}
-          categories={categories}
-          suppliers={suppliersList}
-        />
-      )}
-
-      {/* Add/Edit Category Modal */}
-      {showCategoryModal && (
-        <AddEditCategoryModal
-          show={showCategoryModal}
-          handleClose={() => setShowCategoryModal(false)}
-          handleSave={async (cat) => {
-            await axios.post('http://localhost:5000/api/category', cat);
-            await fetchCategories();
-            setShowCategoryModal(false);
-          }}
-        />
-      )}
+                        Edit
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        className="w-100"
+                        onClick={() => handleDelete(prod.product_ID)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </Table>
     </div>
+  </div>
+
+  {/* Add/Edit Product Modal */}
+    {showAdd && (
+    <AddEditProductModal
+      show={showAdd}
+      handleClose={() => {
+        setShowAdd(false);
+        setEditProduct(null); // ✅ important to clear edit state
+      }}
+      handleSave={handleSave}
+      initial={editProduct}     // ✅ this passes the correct data
+      categories={categories}
+      suppliers={suppliers}
+/>
+
+    )}
+
+
+
+  {/* Add/Edit Category Modal */}
+  {showCategoryModal && (
+    <AddEditCategoryModal
+      show={showCategoryModal}
+      handleClose={() => setShowCategoryModal(false)}
+      handleSave={async (cat) => {
+        await axios.post('http://localhost:5000/api/category', cat);
+        await fetchCategories();
+        setShowCategoryModal(false);
+      }}
+    />
+  )}
+</div>
+
   );
 };
 

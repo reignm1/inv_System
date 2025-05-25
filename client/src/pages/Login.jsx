@@ -34,7 +34,7 @@ const Login = () => {
   return (
     <div className="login-container">
       <div className="login-left">
-        <img src="/logo192.png" alt="MarketTrack Logo" className="login-logo" />
+        <div className="login-logo" />
         <div className="login-title">MarketTrack</div>
         <div className="login-subtitle">
           Stay organized. Track products. Simplify inventory.
@@ -105,15 +105,7 @@ const Login = () => {
           </div>
         )}
       </div>
-      <div className="login-right" style={{
-        flex: 1,
-        background: `url(${process.env.PUBLIC_URL}/login-bg.jpg) center center/cover no-repeat`,
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'flex-end',
-        borderRadius: 0
-      }}></div>
+      <div className="login-right"></div>
     </div>
   );
 };

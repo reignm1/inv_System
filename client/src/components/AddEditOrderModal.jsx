@@ -3,11 +3,10 @@ import { Modal, Button, Form, Alert, Spinner } from 'react-bootstrap';
 
 const initialFormState = {
   supplier_ID: '',
-  product_ID: '',
   quantity_Ordered: '',
-  order_Date: '',
+  order_Date: '', // Will be set to today in useEffect
   unit_Price: '',
-  status: 'Pending'
+  status: 'Pending',
 };
 
 const AddEditOrderModal = ({ show, handleClose, handleSave, initial, suppliers = [], products = [] }) => {
@@ -16,14 +15,15 @@ const AddEditOrderModal = ({ show, handleClose, handleSave, initial, suppliers =
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
     setForm(initial ? {
       supplier_ID: initial.supplier_ID || '',
-      product_ID: initial.product_ID || '',
       quantity_Ordered: initial.quantity_Ordered || '',
-      order_Date: initial.order_Date || '',
+      order_Date: initial.order_Date || today,
       unit_Price: initial.unit_Price || '',
-      status: initial.status || 'Pending'
-    } : initialFormState);
+      status: initial.status || 'Pending',
+    } : { ...initialFormState, order_Date: today });
+    
     setError('');
     setLoading(false);
   }, [initial, show]);
@@ -31,28 +31,36 @@ const AddEditOrderModal = ({ show, handleClose, handleSave, initial, suppliers =
   const onChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
   const onSave = async () => {
+    // Validation
     if (!form.supplier_ID) {
       setError('Supplier is required.');
       return;
     }
-    if (!form.product_ID) {
-      setError('Product is required.');
+    if (!form.quantity_Ordered || isNaN(form.quantity_Ordered) || Number(form.quantity_Ordered) <= 0) {
+      setError('Quantity must be a positive number.');
       return;
     }
-    if (!form.quantity_Ordered || Number(form.quantity_Ordered) < 0) {
-      setError('Quantity is required and must be positive.');
+    if (form.unit_Price && (isNaN(form.unit_Price) || Number(form.unit_Price) <= 0)) {
+      setError('Unit price must be a positive number.');
       return;
     }
-    if (form.unit_Price && Number(form.unit_Price) < 0) {
-      setError('Unit price must be positive.');
-      return;
-    }
+
     setError('');
     setLoading(true);
+
     try {
-      await handleSave(form);
+      const cleanedForm = {
+        ...form,
+        quantity_Ordered: form.quantity_Ordered.toString().trim(),
+        unit_Price: form.unit_Price?.toString().trim() || '',
+      };
+
+      await handleSave(cleanedForm);
       setLoading(false);
-      setForm(initialFormState);
+
+      // Reset form only if adding
+      if (!initial) setForm({ ...initialFormState, order_Date: new Date().toISOString().split('T')[0] });
+
       handleClose();
     } catch (e) {
       setError('Failed to save order.');
@@ -61,7 +69,7 @@ const AddEditOrderModal = ({ show, handleClose, handleSave, initial, suppliers =
   };
 
   const handleModalClose = () => {
-    setForm(initialFormState);
+    setForm({ ...initialFormState, order_Date: new Date().toISOString().split('T')[0] });
     setError('');
     handleClose();
   };
@@ -85,30 +93,16 @@ const AddEditOrderModal = ({ show, handleClose, handleSave, initial, suppliers =
             >
               <option value="">Select Supplier</option>
               {suppliers.map(sup => (
-                <option key={sup.supplier_ID} value={sup.supplier_ID}>{sup.supplier_Company}</option>
+                <option key={sup.supplier_ID} value={sup.supplier_ID}>
+                  {sup.supplier_Company}
+                </option>
               ))}
             </Form.Select>
             <Form.Control.Feedback type="invalid">
               Supplier is required.
             </Form.Control.Feedback>
           </Form.Group>
-          <Form.Group className="mb-2">
-            <Form.Label>Product</Form.Label>
-            <Form.Select
-              name="product_ID"
-              value={form.product_ID}
-              onChange={onChange}
-              isInvalid={!!error && !form.product_ID}
-            >
-              <option value="">Select Product</option>
-              {products.map(prod => (
-                <option key={prod.product_ID} value={prod.product_ID}>{prod.product_Name}</option>
-              ))}
-            </Form.Select>
-            <Form.Control.Feedback type="invalid">
-              Product is required.
-            </Form.Control.Feedback>
-          </Form.Group>
+
           <Form.Group className="mb-2">
             <Form.Label>Quantity</Form.Label>
             <Form.Control
@@ -116,12 +110,13 @@ const AddEditOrderModal = ({ show, handleClose, handleSave, initial, suppliers =
               type="number"
               value={form.quantity_Ordered}
               onChange={onChange}
-              isInvalid={!!error && (!form.quantity_Ordered || Number(form.quantity_Ordered) < 0)}
+              isInvalid={!!error && (!form.quantity_Ordered || Number(form.quantity_Ordered) <= 0)}
             />
             <Form.Control.Feedback type="invalid">
-              Quantity is required and must be positive.
+              Quantity must be a positive number.
             </Form.Control.Feedback>
           </Form.Group>
+
           <Form.Group className="mb-2">
             <Form.Label>Order Date</Form.Label>
             <Form.Control
@@ -131,6 +126,7 @@ const AddEditOrderModal = ({ show, handleClose, handleSave, initial, suppliers =
               onChange={onChange}
             />
           </Form.Group>
+
           <Form.Group className="mb-2">
             <Form.Label>Unit Price</Form.Label>
             <Form.Control
@@ -138,12 +134,13 @@ const AddEditOrderModal = ({ show, handleClose, handleSave, initial, suppliers =
               type="number"
               value={form.unit_Price}
               onChange={onChange}
-              isInvalid={!!error && form.unit_Price && Number(form.unit_Price) < 0}
+              isInvalid={!!error && form.unit_Price && Number(form.unit_Price) <= 0}
             />
             <Form.Control.Feedback type="invalid">
-              Unit price must be positive.
+              Unit price must be a positive number.
             </Form.Control.Feedback>
           </Form.Group>
+
           <Form.Group className="mb-2">
             <Form.Label>Status</Form.Label>
             <Form.Select name="status" value={form.status} onChange={onChange}>
@@ -159,7 +156,13 @@ const AddEditOrderModal = ({ show, handleClose, handleSave, initial, suppliers =
           Cancel
         </Button>
         <Button variant="primary" onClick={onSave} disabled={loading}>
-          {loading ? <Spinner animation="border" size="sm" /> : 'Save'}
+          {loading ? (
+            <>
+              <Spinner animation="border" size="sm" /> Saving...
+            </>
+          ) : (
+            'Save'
+          )}
         </Button>
       </Modal.Footer>
     </Modal>

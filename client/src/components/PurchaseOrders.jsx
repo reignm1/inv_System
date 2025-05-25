@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
-import { Table, Button, Form, InputGroup, Spinner, Alert, Card } from 'react-bootstrap';
+import { Table, Button, Form, InputGroup, Alert, Card } from 'react-bootstrap';
 import { FaPlus, FaEdit } from 'react-icons/fa';
 import AddEditOrderModal from './AddEditOrderModal';
 
 const PurchaseOrders = () => {
   const [orders, setOrders] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
-  const [products, setProducts] = useState([]);
   const [searchOrderID, setSearchOrderID] = useState('');
   const [searchSupplier, setSearchSupplier] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -20,13 +19,13 @@ const PurchaseOrders = () => {
   useEffect(() => {
     fetchOrders();
     fetchSuppliers();
-    fetchProducts();
-    // Close edit popup on outside click
+
     const handleClickOutside = (event) => {
       if (editPopupRef.current && !editPopupRef.current.contains(event.target)) {
         setEditIndex(null);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -36,30 +35,47 @@ const PurchaseOrders = () => {
     setError('');
     try {
       const res = await axios.get('http://localhost:5000/api/purchaseorder');
-      setOrders(res.data); // Even if res.data is [], that's not an error!
+      console.log('Fetched orders:', res.data); // Debug log to check data structure
+      setOrders(res.data);
     } catch (err) {
+      console.error('Error fetching orders:', err);
       setError('Failed to fetch orders.');
     }
     setLoading(false);
   };
 
   const fetchSuppliers = async () => {
-    const res = await axios.get('http://localhost:5000/api/suppliers');
-    setSuppliers(res.data);
+    try {
+      const res = await axios.get('http://localhost:5000/api/suppliers');
+      console.log('Fetched suppliers:', res.data); // Debug log
+      setSuppliers(res.data);
+    } catch (err) {
+      console.error('Error fetching suppliers:', err);
+    }
   };
 
-  const fetchProducts = async () => {
-    const res = await axios.get('http://localhost:5000/api/products');
-    setProducts(res.data);
+  const filteredOrders = orders.filter(order => {
+    const orderIdMatch = order.purchase_OrderID.toString().toLowerCase().includes(searchOrderID.toLowerCase());
+    const supplierMatch = searchSupplier === '' || 
+      (order.supplier_Company && order.supplier_Company.toLowerCase().includes(searchSupplier.toLowerCase()));
+    
+    return orderIdMatch && supplierMatch;
+  });
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
   };
 
-  // Filtered orders
-  const filteredOrders = orders.filter(order =>
-    order.purchase_OrderID.toString().toLowerCase().includes(searchOrderID.toLowerCase()) &&
-    (searchSupplier === '' || (order.supplier_Company && order.supplier_Company === searchSupplier))
-  );
-
-  // --- CRUD Handlers ---
+  const formatPrice = (price) => {
+    if (!price && price !== 0) return '';
+    return parseFloat(price).toFixed(2);
+  };
 
   const handleSave = async (order) => {
     setLoading(true);
@@ -74,16 +90,17 @@ const PurchaseOrders = () => {
       setShowModal(false);
       setEditOrder(null);
       setEditIndex(null);
-    } catch {
+    } catch (err) {
+      console.error('Error saving order:', err);
       setError('Failed to save order.');
       setLoading(false);
     }
   };
 
-  const handleEdit = (order, idx) => {
+  const handleEdit = (order) => {
     setEditOrder(order);
-    setEditIndex(idx);
-    setShowModal(false);
+    setShowModal(true);
+    setEditIndex(null);
     setError('');
   };
 
@@ -96,14 +113,14 @@ const PurchaseOrders = () => {
         fetchOrders();
         setEditOrder(null);
         setEditIndex(null);
-      } catch {
+      } catch (err) {
+        console.error('Error deleting order:', err);
         setError('Failed to delete order.');
         setLoading(false);
       }
     }
   };
 
-  // Show Add
   const handleShowAdd = () => {
     setEditOrder(null);
     setShowModal(true);
@@ -111,141 +128,171 @@ const PurchaseOrders = () => {
     setError('');
   };
 
+  if (loading && orders.length === 0) {
+    return (
+      <Card className="shadow-sm border-0 rounded-4 mb-4" style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
+        <Card.Body className="text-center">
+          <p className="mt-2">Loading purchase orders...</p>
+        </Card.Body>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="shadow-sm border-0 rounded-4 mb-4" style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
-      <Card.Header className="bg-white border-0 d-flex justify-content-between align-items-center">
-        <h5 className="mb-0 fw-bold">Purchase Orders</h5>
-        <Button variant="primary" size="sm" onClick={handleShowAdd}>Add Order</Button>
-      </Card.Header>
-      <Card.Body>
+    <div className="container my-4">
         {/* Search Bar */}
-        <div className="d-flex mb-3 gap-3">
-          <InputGroup>
+        <div className="d-flex flex-wrap gap-2 mb-3">
+          <InputGroup style={{ maxWidth: 250 }}>
             <Form.Control
-              placeholder="Order ID"
+              placeholder="Search Order ID"
               value={searchOrderID}
-              onChange={e => setSearchOrderID(e.target.value)}
-              style={{ minWidth: 220 }}
+              onChange={(e) => setSearchOrderID(e.target.value)}
             />
           </InputGroup>
-          <InputGroup>
-            <Form.Select
+          <InputGroup style={{ maxWidth: 250 }}>
+            <Form.Control
+              placeholder="Search Supplier"
               value={searchSupplier}
-              onChange={e => setSearchSupplier(e.target.value)}
-              style={{ minWidth: 180 }}
-            >
-              <option value="">Supplier</option>
-              {suppliers.map(sup => (
-                <option key={sup.supplier_ID} value={sup.supplier_Company}>{sup.supplier_Company}</option>
-              ))}
-            </Form.Select>
+              onChange={(e) => setSearchSupplier(e.target.value)}
+            />
           </InputGroup>
+          <Button 
+            variant="outline-secondary" 
+            size="sm" 
+            onClick={() => {
+              setSearchOrderID('');
+              setSearchSupplier('');
+            }}
+          >
+            Clear Filters
+          </Button>
         </div>
 
-        {/* Purchase Order Table */}
-        <div style={{ background: '#f8f9f9', borderRadius: 12, padding: 0, boxShadow: '0 2px 8px #0001' }}>
-          <div className="d-flex align-items-center justify-content-between px-4 py-2" style={{ borderBottom: '1px solid #eee' }}>
-            <span className="fw-bold" style={{ fontSize: 22 }}>Purchase Order</span>
-            <Button variant="light" onClick={handleShowAdd} style={{ borderRadius: '50%', fontSize: 22, width: 38, height: 38 }}>
+        {/* Table */}
+        <div className="card shadow-sm">
+          <div className="card-header d-flex justify-content-between align-items-center">
+            <span className="fw-bold" style={{ fontSize: 22 }}>Purchase Orders</span>
+            <Button 
+              variant="success" 
+              onClick={handleShowAdd} 
+              className="d-flex align-items-center justify-content-center"
+            >
               <FaPlus />
             </Button>
           </div>
-          <Table hover responsive className="mb-0" style={{ background: 'transparent' }}>
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Supplier</th>
-                <th>Contact</th>
-                <th>Date</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Status</th>
-                <th style={{ width: 60 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.length === 0 ? (
+          
+          <div>
+            <Table hover className="mb-0 table-striped" style={{ background: 'transparent' }}>
+              <thead className="table-light">
                 <tr>
-                  <td colSpan="8" className="text-center text-muted">No orders found.</td>
+                  <th>Order ID</th>
+                  <th>Supplier</th>
+                  <th>Contact</th>
+                  <th>Date</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th style={{ width: 80}}>Actions</th>
                 </tr>
-              ) : (
-                orders.map((order, idx) => (
-                  <tr key={order.purchase_OrderID}>
-                    <td>{order.purchase_OrderID}</td>
-                    <td>{order.supplier_Company}</td>
-                    <td>{order.contact_Person}</td>
-                    <td>{order.order_Date}</td>
-                    <td>{order.quantity_Ordered}</td>
-                    <td>{order.unit_Price}</td>
-                    <td>{order.status}</td>
-                    <td style={{ position: 'relative' }}>
-                      <Button
-                        variant="outline-success"
-                        size="sm"
-                        style={{ borderRadius: '50%' }}
-                        onClick={() => handleEdit(order, idx)}
-                      >
-                        <FaEdit />
-                      </Button>
-                      {/* Edit/Delete Popup */}
-                      {editIndex === idx && (
-                        <div
-                          ref={editPopupRef}
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            right: 40,
-                            background: '#fff',
-                            border: '1px solid #ccc',
-                            borderRadius: 8,
-                            boxShadow: '0 2px 8px #0002',
-                            zIndex: 10,
-                            padding: 12,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 8
-                          }}
-                        >
-                          <Button
-                            variant="success"
-                            size="sm"
-                            onClick={() => setShowModal(true)}
-                            style={{ minWidth: 70 }}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => handleDelete(order.purchase_OrderID)}
-                            style={{ minWidth: 70 }}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      )}
+              </thead>
+              <tbody>
+                {filteredOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan="8" className="text-center text-muted py-4">
+                      {loading ? 'Loading...' : 'No orders found.'}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </Table>
+                ) : (
+                  filteredOrders.map((order, idx) => (
+                    <tr key={order.purchase_OrderID}>
+                      <td className="fw-semibold">{order.purchase_OrderID}</td>
+                      <td>{order.supplier_Company || 'N/A'}</td>
+                      <td>{order.contact_Person || 'N/A'}</td>
+                      <td>{formatDate(order.order_Date)}</td>
+                      <td>{order.quantity_Ordered}</td>
+                      <td>₱ {formatPrice(order.unit_Price)}</td>
+                      <td>
+                        <span className={`badge ${
+                          order.status === 'Pending' ? 'bg-warning text-dark' : 
+                          order.status === 'Completed' ? 'bg-success' : 
+                          order.status === 'Cancelled' ? 'bg-danger' :
+                          'bg-secondary'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td style={{ position: 'relative' }}>
+                        <Button
+                          variant="outline-success"
+                          size="sm"
+                          style={{borderRadius: '50%'}}
+                          onClick={() => setEditIndex(editIndex === idx ? null : idx)}
+                        >
+                          <FaEdit/>
+                        </Button>
+                        {editIndex === idx && (
+                          <div
+                            ref={editPopupRef}
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              right: 45,
+                              background: '#fff',
+                              border: '1px solid #dee2e6',
+                              borderRadius: 8,
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                              zIndex: 1000,
+                              padding: 8,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 4,
+                              minWidth: 100
+                            }}
+                          >
+                            <Button 
+                              variant="success" 
+                              size="sm" 
+                              onClick={() => handleEdit(order)}
+                              className="text-start"
+                            >
+                              Edit
+                            </Button>
+                            <Button 
+                              variant="danger" 
+                              size="sm" 
+                              onClick={() => handleDelete(order.purchase_OrderID)}
+                              className="text-start"
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </Table>
+          </div>
         </div>
 
-        {/* Add/Edit Order Modal */}
+        {/* Error Alert */}
+        {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
+
+        {/* Modal */}
         {showModal && (
           <AddEditOrderModal
             show={showModal}
-            handleClose={() => { setShowModal(false); setEditOrder(null); }}
+            handleClose={() => { 
+              setShowModal(false); 
+              setEditOrder(null); 
+            }}
             handleSave={handleSave}
             initial={editOrder}
             suppliers={suppliers}
-            products={products}
           />
         )}
-        {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
-      </Card.Body>
-    </Card>
+    </div>
   );
 };
 

@@ -1,5 +1,5 @@
 body {
-    padding: 20px;
+    padding: 0px;
     background-color: #f8f9fa; /* Example background */
     font-family: 'Poppins', Arial, sans-serif; /* Example font */
 }
@@ -56,7 +56,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .sidebar .nav-link {
   color: #fff;
-  border-radius: 8px;
+  border-radius: 6px;
   margin-bottom: 8px;
   font-size: 1.1rem;
   display: flex;
@@ -66,7 +66,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .sidebar .nav-link.active,
 .sidebar .nav-link:hover {
-  background: #fff;
+  background: #ffffff46;
   color: #25877b;
 }
 
@@ -75,3 +75,4 @@ h1, h2, h3, h4, h5, h6 {
     padding: 10px;
     text-align: center;
 }
+

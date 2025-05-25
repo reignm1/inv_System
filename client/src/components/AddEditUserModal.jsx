@@ -13,7 +13,6 @@ const initialFormState = {
   user_Username: '',
   user_Password: '',
   user_Role: 'User',
-  user_Email: ''
 };
 
 const AddEditUserModal = ({ show, handleClose, handleSave, initial }) => {
@@ -31,7 +30,6 @@ const AddEditUserModal = ({ show, handleClose, handleSave, initial }) => {
       user_Username: initial.user_Username || '',
       user_Password: '',
       user_Role: initial.user_Role || 'User',
-      user_Email: initial.user_Email || ''
     } : initialFormState);
     setError('');
     setLoading(false);
@@ -57,7 +55,7 @@ const AddEditUserModal = ({ show, handleClose, handleSave, initial }) => {
       setError('Password must be at least 6 characters.');
       return;
     }
-    if (form.user_Email && !emailRegex.test(form.user_Email)) {
+    if (form.user_Address && !emailRegex.test(form.user_Address)) {
       setError('Please enter a valid email address.');
       return;
     }
@@ -127,7 +125,7 @@ const AddEditUserModal = ({ show, handleClose, handleSave, initial }) => {
             />
           </Form.Group>
           <Form.Group className="mb-2">
-            <Form.Label>Address</Form.Label>
+            <Form.Label>Email Address</Form.Label>
             <Form.Control
               name="user_Address"
               value={form.user_Address}
@@ -180,19 +178,6 @@ const AddEditUserModal = ({ show, handleClose, handleSave, initial }) => {
               <option value="User">User</option>
               <option value="Pending">Pending</option>
             </Form.Select>
-          </Form.Group>
-          <Form.Group className="mb-2">
-            <Form.Label>Email</Form.Label>
-            <Form.Control
-              name="user_Email"
-              value={form.user_Email}
-              onChange={onChange}
-              isInvalid={!!error && form.user_Email && !emailRegex.test(form.user_Email)}
-              placeholder="Enter email address"
-            />
-            <Form.Control.Feedback type="invalid">
-              Please enter a valid email address.
-            </Form.Control.Feedback>
           </Form.Group>
         </Form>
       </Modal.Body>

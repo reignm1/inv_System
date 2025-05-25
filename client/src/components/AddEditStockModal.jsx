@@ -7,26 +7,32 @@ const initialFormState = {
   last_RestockDate: ''
 };
 
-const AddEditStockModal = ({ show, handleClose, handleSave, initial }) => {
+const AddEditStockModal = ({ show, handleClose, handleSave, initial, products }) => {
   const [form, setForm] = useState(initialFormState);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setForm(initial ? {
-      product_ID: initial.product_ID || '',
-      stock_Quantity: initial.stock_Quantity || '',
-      last_RestockDate: initial.last_RestockDate || ''
-    } : initialFormState);
+    if (initial) {
+      setForm({
+        product_ID: initial.product_ID || '',
+        stock_Quantity: initial.stock_Quantity || '',
+        last_RestockDate: initial.last_RestockDate
+          ? initial.last_RestockDate.split('T')[0] // Format date string (YYYY-MM-DD)
+          : ''
+      });
+    } else {
+      setForm(initialFormState);
+    }
     setError('');
     setLoading(false);
   }, [initial, show]);
 
-  const onChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const onSave = async () => {
     if (!form.product_ID) {
-      setError('Product ID is required.');
+      setError('Product is required.');
       return;
     }
     if (!form.stock_Quantity || Number(form.stock_Quantity) < 0) {
@@ -38,7 +44,6 @@ const AddEditStockModal = ({ show, handleClose, handleSave, initial }) => {
     try {
       await handleSave(form);
       setLoading(false);
-      setForm(initialFormState);
       handleClose();
     } catch (e) {
       setError('Failed to save stock.');
@@ -55,36 +60,36 @@ const AddEditStockModal = ({ show, handleClose, handleSave, initial }) => {
   return (
     <Modal show={show} onHide={handleModalClose} centered>
       <Modal.Header closeButton>
-        <Modal.Title>{initial ? 'Edit' : 'Add'} Stock</Modal.Title>
+        <Modal.Title>{initial ? 'Edit Stock' : 'Add Stock'}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {error && <Alert variant="danger">{error}</Alert>}
         <Form>
           <Form.Group className="mb-2">
-            <Form.Label>Product ID</Form.Label>
-            <Form.Control
+            <Form.Label>Product</Form.Label>
+            <Form.Select
               name="product_ID"
               value={form.product_ID}
               onChange={onChange}
-              isInvalid={!!error && !form.product_ID}
-              autoFocus
-            />
-            <Form.Control.Feedback type="invalid">
-              Product ID is required.
-            </Form.Control.Feedback>
+              disabled={!!initial} // disable product change when editing
+            >
+              <option value="">Select a Product</option>
+              {products.map(product => (
+                <option key={product.product_ID} value={product.product_ID}>
+                  {product.product_Name}
+                </option>
+              ))}
+            </Form.Select>
           </Form.Group>
           <Form.Group className="mb-2">
             <Form.Label>Quantity</Form.Label>
             <Form.Control
               name="stock_Quantity"
               type="number"
+              min="0"
               value={form.stock_Quantity}
               onChange={onChange}
-              isInvalid={!!error && (!form.stock_Quantity || Number(form.stock_Quantity) < 0)}
             />
-            <Form.Control.Feedback type="invalid">
-              Quantity is required and must be positive.
-            </Form.Control.Feedback>
           </Form.Group>
           <Form.Group className="mb-2">
             <Form.Label>Last Restock Date</Form.Label>
