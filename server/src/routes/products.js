@@ -8,7 +8,7 @@ const router = express.Router();
 router.use(authenticateJWT);
 
 // Get all products with category and supplier names
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const [rows] = await pool.query(
       `SELECT p.*, c.category_Name, s.supplier_Company
@@ -23,7 +23,7 @@ router.get('/', async (req, res) => {
 });
 
 // Add a product
-router.post('/', authorizeRole(['Admin', 'SuperAdmin']), async (req, res) => {
+router.post('/', authenticateJWT, authorizeRole(['Admin', 'SuperAdmin']), async (req, res) => {
   const { product_Name, category_ID, supplier_ID, price, product_Quantity } = req.body;
   try {
     const [result] = await pool.query(
@@ -37,7 +37,7 @@ router.post('/', authorizeRole(['Admin', 'SuperAdmin']), async (req, res) => {
 });
 
 // Update a product
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT, authorizeRole(['SuperAdmin', 'Admin']), async (req, res) => {
   const { id } = req.params;
   const { product_Name, category_ID, supplier_ID, price, product_Quantity } = req.body;
   try {
@@ -52,7 +52,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete a product
-router.delete('/:id', authorizeRole(['Admin']), async (req, res) => {
+router.delete('/:id', authenticateJWT, authorizeRole(['Admin','SuperAdmin']), async (req, res) => {
   const { id } = req.params;
   try {
     await pool.query('DELETE FROM product WHERE product_ID = ?', [id]);

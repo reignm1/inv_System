@@ -1,9 +1,11 @@
 const express = require('express');
 const pool = require('../db');
+const authenticateJWT = require('../middleware/authenticateJWT');
+const authorizeRole = require('../middleware/authorizeRole');
 const router = express.Router();
 
 // GET all stock entries with joined product, category, supplier details
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const query = `
       SELECT 
@@ -27,7 +29,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST add new stock or update existing stock quantity and restock date
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, authorizeRole('SuperAdmin', 'Admin'), async (req, res) => {
   const { product_ID, stock_Quantity, last_RestockDate } = req.body;
   try {
     const query = `
@@ -45,7 +47,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT update existing stock by stock_ID
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT, authorizeRole('SuperAdmin' , 'Admin'), async (req, res) => {
   const { id } = req.params;
   const { stock_Quantity, last_RestockDate } = req.body;
   try {
@@ -62,7 +64,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE a stock entry by stock_ID
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateJWT, authorizeRole('SuperAdmin', 'Admin'), async (req, res) => {
   const { id } = req.params;
   try {
     const query = `DELETE FROM stock WHERE stock_ID = ?;`;

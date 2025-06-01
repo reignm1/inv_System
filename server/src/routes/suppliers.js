@@ -1,9 +1,12 @@
 const express = require('express');
 const pool = require('../db');
+const authenticateJWT = require('../middleware/authenticateJWT');
+const authorizeRole = require('../middleware/authorizeRole');
 const router = express.Router();
 
+
 // Get all suppliers
-router.get('/', async (req, res) => {
+router.get('/',authenticateJWT, async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT 
@@ -26,7 +29,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single supplier by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   const { id } = req.params;
   try {
     const [rows] = await pool.query(`
@@ -53,7 +56,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Add a supplier
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, authorizeRole('SuperAdmin', 'Admin'), async (req, res) => {
   const { supplier_Company, contact_Person, supplier_ContactNumber, supplier_Email, supplier_Address } = req.body;
   
   // Validation
@@ -81,7 +84,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update a supplier
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT, authorizeRole('SuperAdmin', 'Admin'), async (req, res) => {
   const { id } = req.params;
   const { supplier_Company, contact_Person, supplier_ContactNumber, supplier_Email, supplier_Address } = req.body;
   
@@ -117,7 +120,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete a supplier
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateJWT, authorizeRole ('SuperAdmin', 'Admin'), async (req, res) => {
   const { id } = req.params;
   try {
     // Check if supplier exists
