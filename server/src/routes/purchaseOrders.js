@@ -1,9 +1,11 @@
 const express = require('express');
 const pool = require('../db');
+const authenticateJWT = require('../middleware/authenticateJWT');
+const authorizeRole = require('../middleware/authorizeRole');
 const router = express.Router();
 
 // Get all purchase orders with supplier details
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT 
@@ -31,7 +33,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get single purchase order by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   const { id } = req.params;
   try {
     const [rows] = await pool.query(`
@@ -63,7 +65,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Add a purchase order
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, authorizeRole('SuperAdmin', 'Admin'), async (req, res) => {
   const { supplier_ID, order_Date, quantity_Ordered, unit_Price, status } = req.body;
   
   // Validation
@@ -112,7 +114,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update a purchase order
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT, authorizeRole('SuperAdmin', 'Admin'), async (req, res) => {
   const { id } = req.params;
   const { supplier_ID, order_Date, quantity_Ordered, unit_Price, status } = req.body;
   
@@ -163,7 +165,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete a purchase order
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateJWT, authorizeRole('SuperAdmin', 'Admin'), async (req, res) => {
   const { id } = req.params;
   try {
     // Check if purchase order exists
